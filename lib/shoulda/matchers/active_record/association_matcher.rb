@@ -6,8 +6,8 @@ module Shoulda # :nodoc:
       #
       #   it { should belong_to(:parent) }
       #
-      def belong_to(name)
-        AssociationMatcher.new(:belongs_to, name)
+      def belong_to(name, options = {})
+        AssociationMatcher.new(:belongs_to, name, options)
       end
 
       # Ensures that the has_many relationship exists.  Will also test that the
@@ -53,9 +53,10 @@ module Shoulda # :nodoc:
       end
 
       class AssociationMatcher # :nodoc:
-        def initialize(macro, name)
+        def initialize(macro, name, options = {})
           @macro = macro
           @name  = name
+          @options = options
         end
 
         def through(through)
@@ -99,9 +100,16 @@ module Shoulda # :nodoc:
           if reflection.nil?
             @missing = "no association called #{@name}"
             false
+          elsif !options_correct?
+            @missing = "options don't match #{@options.to_s}"
+            false
           else
             true
           end
+        end
+
+        def options_correct?
+          @options.all? { |option| reflection.options[option.shift] == option.shift }
         end
 
         def macro_correct?

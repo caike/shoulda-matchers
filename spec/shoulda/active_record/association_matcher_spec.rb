@@ -67,6 +67,46 @@ describe Shoulda::Matchers::ActiveRecord::AssociationMatcher do
       end
       Child.new.should_not @matcher.dependent(:destroy)
     end
+
+    context 'with :options' do
+      it "should reject a nonexistent association" do
+        define_model :grade
+        Grade.new.should_not belong_to(:gradeable, :polymorphic => false)
+      end
+
+      it "should accept a good association matching correct options" do
+        create_table(:grades) do |t|
+          t.references :child
+          t.references :gradeable, :polymorphic => true
+        end
+        define_model_class :grade do
+          belongs_to :gradeable, :polymorphic => true
+        end
+        Grade.new.should belong_to(:gradeable, :polymorphic => true)
+      end
+
+      it "should accept a good association without matching options" do
+        create_table(:grades) do |t|
+          t.references :child
+          t.references :gradeable, :polymorphic => true
+        end
+        define_model_class :grade do
+          belongs_to :gradeable, :polymorphic => true
+        end
+        Grade.new.should belong_to(:gradeable)
+      end
+
+      it "should reject an association with incorrect matching options" do
+        create_table(:grades) do |t|
+          t.references :child
+          t.references :gradeable, :polymorphic => true
+        end
+        define_model_class :grade do
+          belongs_to :gradeable, :polymorphic => true
+        end
+        Grade.new.should_not belong_to(:gradeable, :polymorphic => false)
+      end
+    end
   end
 
   context "have_many" do
